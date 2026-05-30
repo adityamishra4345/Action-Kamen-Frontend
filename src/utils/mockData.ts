@@ -1,4 +1,4 @@
-import { TextAnalysisResponse, QRInspectionResponse } from "../types/index";
+import { TextAnalysisResponse, QRInspectionResponse } from "../types";
 
 export const mockTextDatabase: Record<string, TextAnalysisResponse> = {
   urgent: {
