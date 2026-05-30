@@ -1,18 +1,16 @@
-import type {
-  TextAnalysisResponse,
-  QRInspectionResponse,
-} from "../types/index.ts";
+import { type TextAnalysisResponse, type QRInspectionResponse } from "../types";
+
 export const mockTextDatabase: Record<string, TextAnalysisResponse> = {
   urgent: {
     verdict: "PHISHING",
     threat_score: 90,
     triggered_keywords: ["account suspended", "verify OTP", "urgent"],
-    nlp_label: "phishing/scan",
+    nlp_label: "phishing/scam",
     nlp_confidence: 0.95,
     findings: [
       "Triggered localized risk indicator for: OTP Harvest",
-      "Local MiniLM neural net flagged language alignment issues.",
-    ],
+      "Local MiniLM neural net flagged language alignment issues."
+    ]
   },
   winner: {
     verdict: "SUSPICIOUS",
@@ -22,8 +20,8 @@ export const mockTextDatabase: Record<string, TextAnalysisResponse> = {
     nlp_confidence: 0.82,
     findings: [
       "High probability of lottery fraud language detected.",
-      "Asks for upfront personal details to claim a reward.",
-    ],
+      "Asks for upfront personal details to claim a reward."
+    ]
   },
   default: {
     verdict: "SAFE",
@@ -32,9 +30,9 @@ export const mockTextDatabase: Record<string, TextAnalysisResponse> = {
     nlp_label: "safe business alert",
     nlp_confidence: 0.98,
     findings: [
-      "No suspicious patterns or high-risk urgent triggers found in text content.",
-    ],
-  },
+      "No suspicious patterns or high-risk urgent triggers found in text content."
+    ]
+  }
 };
 
 export const mockQRDatabase: Record<string, QRInspectionResponse> = {
@@ -44,15 +42,15 @@ export const mockQRDatabase: Record<string, QRInspectionResponse> = {
     content_type: "URL",
     redirect_chain: [
       "http://bit.ly/fake-pay",
-      "https://paypal-security-update.com",
+      "https://paypal-security-update.com"
     ],
     typosquat_match: "paypal",
     tld_risk: true,
     apk_detected: false,
     findings: [
       "High-risk or malicious top-level domain (TLD) detected.",
-      "Potential typosquatting attempt mimicking a known financial brand.",
-    ],
+      "Potential typosquatting attempt mimicking a known financial brand."
+    ]
   },
   default: {
     verdict: "SAFE",
@@ -63,7 +61,7 @@ export const mockQRDatabase: Record<string, QRInspectionResponse> = {
     tld_risk: false,
     apk_detected: false,
     findings: [
-      "Domain reputation is clean. No malicious redirect chains detected.",
-    ],
-  },
+      "Domain reputation is clean. No malicious redirect chains detected."
+    ]
+  }
 };
