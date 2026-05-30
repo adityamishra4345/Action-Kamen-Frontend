@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { mockTextDatabase, mockQRDatabase } from "./utils/mockData";
-import type { TextAnalysisResponse, QRInspectionResponse } from "./types/index";
+import { mockTextDatabase, mockQRDatabase } from "./utils/mockData.ts";
+import type {
+  TextAnalysisResponse,
+  QRInspectionResponse,
+} from "./types/index.ts";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"text" | "qr">("text");
