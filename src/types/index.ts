@@ -3,7 +3,7 @@ export interface TextAnalysisRequest {
 }
 
 export interface TextAnalysisResponse {
-  verdict: 'PHISHING' | 'SUSPICIOUS' | 'SAFE';
+  verdict: "PHISHING" | "SUSPICIOUS" | "SAFE";
   threat_score: number;
   triggered_keywords: string[];
   nlp_label: string;
@@ -16,9 +16,9 @@ export interface QRInspectionRequest {
 }
 
 export interface QRInspectionResponse {
-  verdict: 'SAFE' | 'SUSPICIOUS' | 'DANGEROUS';
+  verdict: "SAFE" | "SUSPICIOUS" | "DANGEROUS";
   threat_score: number;
-  content_type: 'URL' | 'TEXT' | 'COMMAND';
+  content_type: "URL" | "TEXT" | "COMMAND";
   redirect_chain: string[];
   typosquat_match: string | null | boolean;
   tld_risk: boolean;
