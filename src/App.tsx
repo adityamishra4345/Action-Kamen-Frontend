@@ -6,19 +6,20 @@ import type {
 } from "./types/index.ts";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"text" | "qr">("text");
+  const [activeTab, setActiveTab] = useState<"text" | "qr" | "url">("text");
   const [textInput, setTextInput] = useState("");
   const [qrInput, setQrInput] = useState("");
+  const [urlInput, setUrlInput] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [textResult, setTextResult] = useState<TextAnalysisResponse | null>(null);
   const [qrResult, setQrResult] = useState<QRInspectionResponse | null>(null);
+  const [urlResult, setUrlResult] = useState<QRInspectionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     let scanner: Html5QrcodeScanner | null = null;
     
     if (activeTab === "qr" && isScanning) {
-      // Tiny delay ensures the <div> is fully painted before the camera boots up
       setTimeout(() => {
         scanner = new Html5QrcodeScanner(
           "reader",
@@ -110,6 +111,24 @@ export default function App() {
     }
   };
 
+const handleURLScan = async () => {
+    if (!urlInput.trim()) return;
+    setIsLoading(true);
+    try {
+      const r = await fetch("http://127.0.0.1:8000/api/analyze-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: urlInput }),
+      });
+      const d = await r.json();
+      setUrlResult(d);
+    } catch (e) {
+      alert("Failed to connect to backend");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
       <header className="max-w-2xl mx-auto text-center mb-8">
@@ -136,86 +155,169 @@ export default function App() {
             }}
             className={`flex-1 py-2 rounded-lg font-medium ${activeTab === "qr" ? "bg-teal-600" : "bg-slate-800"}`}
           >
-            QR/URL
+            QR Scan
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("url");
+              setUrlResult(null);
+            }}
+            className={`flex-1 py-2 rounded-lg font-medium ${activeTab === "url" ? "bg-teal-600" : "bg-slate-800"}`}
+          >
+            URL AI
           </button>
         </div>
 
-        {activeTab === "text" ? (
+       {activeTab === "text" && (
           <div className="space-y-4">
             <textarea
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              className="w-full h-32 bg-slate-800 rounded-xl p-4 border border-slate-700"
-              placeholder="Paste shady text here..."
+              className="w-full bg-slate-800 rounded-xl p-4 border border-slate-700 min-h-[150px]"
+              placeholder="Paste text or content here to inspect..."
             />
             <button
-              onClick={handleTextScan}
+              onClick={async () => {
+                if (!textInput.trim()) return;
+                setIsLoading(true);
+                try {
+                  const r = await fetch("http://127.0.0.1:8000/api/analyze-text", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: textInput }),
+                  });
+                  const d = await r.json();
+                  setTextResult(d);
+                } catch (e) {
+                  alert("Failed to connect to backend");
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
               disabled={isLoading}
               className="w-full bg-teal-500 hover:bg-teal-400 disabled:bg-teal-800 py-3 rounded-xl font-bold transition-colors"
             >
-              {isLoading ? "Analyzing via MiniLM..." : "Analyze Text Payload"}
+              {isLoading ? "Analyzing Text..." : "Analyze Text Content"}
             </button>
-            
-            {textResult && (
-              <div className={`mt-4 p-4 rounded-xl border ${textResult.verdict === 'SAFE' ? 'bg-slate-800 border-teal-500/30' : 'bg-red-950/30 border-red-500/50'}`}>
-                <div className="flex justify-between font-bold mb-2">
-                  <span className={textResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Verdict: {textResult.verdict}</span>
-                  <span className={textResult.threat_score >= 60 ? 'text-red-400' : ''}>Score: {textResult.threat_score}/100</span>
+          </div>
+        )}
+
+        {activeTab === "qr" && (
+          <div className="space-y-4">
+            {!isScanning && !qrInput && (
+              <button
+                onClick={() => setIsScanning(true)}
+                className="w-full bg-teal-500 hover:bg-teal-400 py-8 rounded-xl font-bold border-2 border-dashed border-teal-400/30 bg-teal-500/5 transition-all text-center block"
+              >
+                Launch Live Camera Scanner
+              </button>
+            )}
+            {isScanning && (
+              <div id="reader" className="overflow-hidden rounded-xl border border-slate-700 bg-black"></div>
+            )}
+            {qrInput && (
+              <div className="space-y-4">
+                <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                  <span className="text-xs font-bold text-slate-400 block mb-1">DECODED TARGET CONTENT</span>
+                  <p className="font-mono break-all text-sm text-teal-400">{qrInput}</p>
                 </div>
-                <p className="text-sm text-slate-400 mb-2">
-                  AI Label: {textResult.nlp_label} (Confidence: {Math.round(textResult.nlp_confidence * 100)}%)
-                </p>
-                {textResult.findings.map((f, i) => (
-                  <p key={i} className="text-xs text-slate-300">
-                    • {f}
-                  </p>
-                ))}
+                <button
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      const r = await fetch("http://127.0.0.1:8000/api/inspect-qr", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ content: qrInput }),
+                      });
+                      const d = await r.json();
+                      setQrResult(d);
+                    } catch (e) {
+                      alert("Backend processing failed");
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  disabled={isLoading}
+                  className="w-full bg-teal-500 hover:bg-teal-400 disabled:bg-teal-800 py-3 rounded-xl font-bold transition-colors"
+                >
+                  {isLoading ? "Inspecting..." : "Verify Decoded Payload"}
+                </button>
+                <button
+                  onClick={() => {
+                    setQrInput("");
+                    setQrResult(null);
+                    setIsScanning(true);
+                  }}
+                  className="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-sm transition-colors"
+                >
+                  Scan Another Target
+                </button>
               </div>
             )}
           </div>
-        ) : (
+        )}
+
+        {activeTab === "url" && (
           <div className="space-y-4">
-            {isScanning ? (
-              // THE FIX: Added white background and min-height so the buttons are visible
-              <div id="reader" className="w-full min-h-[300px] bg-white text-black rounded-xl overflow-hidden p-4" />
-            ) : (
-              <button
-                onClick={() => setIsScanning(true)}
-                className="w-full py-4 border-2 border-dashed border-slate-700 hover:border-teal-500 rounded-xl text-teal-400 transition-colors"
-              >
-                📷 Open Camera
-              </button>
-            )}
             <input
-              value={qrInput}
-              onChange={(e) => setQrInput(e.target.value)}
+              type="text"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
               className="w-full bg-slate-800 rounded-xl p-4 border border-slate-700"
-              placeholder="Paste URL manually..."
+              placeholder="Enter complete URL (e.g., https://example.com)..."
             />
             <button
-              onClick={handleQRScan}
+              onClick={handleURLScan}
               disabled={isLoading}
               className="w-full bg-teal-500 hover:bg-teal-400 disabled:bg-teal-800 py-3 rounded-xl font-bold transition-colors"
             >
-              {isLoading ? "Inspecting Target..." : "Inspect QR Target"}
+              {isLoading ? "Running Deep Gemini Audit..." : "Analyze with Gemini AI"}
             </button>
-            
-            {qrResult && (
-              <div className={`mt-4 p-4 rounded-xl border ${qrResult.verdict === 'SAFE' ? 'bg-slate-800 border-teal-500/30' : 'bg-red-950/30 border-red-500/50'}`}>
-                <div className="flex justify-between font-bold mb-2">
-                  <span className={qrResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Verdict: {qrResult.verdict}</span>
-                  <span className={qrResult.threat_score >= 50 ? 'text-red-400' : ''}>Score: {qrResult.threat_score}/100</span>
-                </div>
-                <p className="text-sm text-slate-400 mb-2">
-                  Type: {qrResult.content_type}
-                </p>
-                {qrResult.findings.map((f, i) => (
-                  <p key={i} className="text-xs text-slate-300">
-                    • {f}
-                  </p>
+          </div>
+        )}
+        {activeTab === "text" && textResult && (
+          <div className={`mt-6 p-4 rounded-xl border ${textResult.verdict === 'SAFE' ? 'bg-slate-800 border-teal-500/30' : 'bg-red-950/30 border-red-500/50'}`}>
+            <div className="flex justify-between font-bold mb-2">
+              <span className={textResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Verdict: {textResult.verdict}</span>
+              <span className={textResult.threat_score >= 60 ? 'text-red-400' : ''}>Score: {textResult.threat_score}/100</span>
+            </div>
+            <p className="text-sm text-slate-400 mb-2">AI Label: {textResult.nlp_label}</p>
+            {textResult.findings.map((f, i) => <p key={i} className="text-xs text-slate-300">• {f}</p>)}
+          </div>
+        )}
+
+        {activeTab === "qr" && qrResult && (
+          <div className={`mt-6 p-4 rounded-xl border ${qrResult.verdict === 'SAFE' ? 'bg-slate-800 border-teal-500/30' : 'bg-red-950/30 border-red-500/50'}`}>
+            <div className="flex justify-between font-bold mb-2">
+              <span className={qrResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Verdict: {qrResult.verdict}</span>
+              <span className={qrResult.threat_score >= 50 ? 'text-red-400' : ''}>Score: {qrResult.threat_score}/100</span>
+            </div>
+            <p className="text-sm text-slate-400 mb-2">Content: {qrResult.content_type}</p>
+            {qrResult.findings.map((f, i) => <p key={i} className="text-xs text-slate-300">• {f}</p>)}
+          </div>
+        )}
+
+        {activeTab === "url" && urlResult && (
+          <div className={`mt-6 p-4 rounded-xl border ${urlResult.verdict === 'SAFE' ? 'bg-slate-800 border-teal-500/30' : 'bg-red-950/30 border-red-500/50'}`}>
+            <div className="flex justify-between font-bold mb-2">
+              <span className={urlResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Gemini Verdict: {urlResult.verdict}</span>
+              <span className={urlResult.threat_score >= 50 ? 'text-red-400' : ''}>Threat Level: {urlResult.threat_score}/100</span>
+            </div>
+            {urlResult.redirect_chain && urlResult.redirect_chain.length > 0 && (
+              <div className="mb-3 p-2 bg-slate-900 rounded border border-slate-700">
+                <span className="text-xs text-slate-400 block mb-1">Redirect Trace:</span>
+                {urlResult.redirect_chain.map((url, i) => (
+                  <div key={i} className="text-xs text-slate-300 break-all">↳ {url}</div>
                 ))}
               </div>
             )}
+            {urlResult.typosquat_match && (
+              <div className="mb-3 text-xs text-red-400 bg-red-950/50 p-2 rounded">
+                ⚠️ Typosquatting Match Detected
+              </div>
+            )}
+            {urlResult.findings.map((f, i) => <p key={i} className="text-xs text-slate-300">• {f}</p>)}
           </div>
         )}
       </main>
