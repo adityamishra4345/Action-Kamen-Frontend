@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { mockTextDatabase, mockQRDatabase } from "./utils/mockData.ts";
 import type {
   TextAnalysisResponse,
   QRInspectionResponse,
@@ -11,77 +10,104 @@ export default function App() {
   const [textInput, setTextInput] = useState("");
   const [qrInput, setQrInput] = useState("");
   const [isScanning, setIsScanning] = useState(false);
-  const [textResult, setTextResult] = useState<TextAnalysisResponse | null>(
-    null,
-  );
+  const [textResult, setTextResult] = useState<TextAnalysisResponse | null>(null);
   const [qrResult, setQrResult] = useState<QRInspectionResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     let scanner: Html5QrcodeScanner | null = null;
+    
     if (activeTab === "qr" && isScanning) {
-      scanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: 250 },
-        false,
-      );
-      scanner.render(
-        (data) => {
-          setQrInput(data);
-          setIsScanning(false);
-          scanner?.clear();
-        },
-        () => {},
-      );
+      // Tiny delay ensures the <div> is fully painted before the camera boots up
+      setTimeout(() => {
+        scanner = new Html5QrcodeScanner(
+          "reader",
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          false
+        );
+        scanner.render(
+          (data) => {
+            setQrInput(data);
+            setIsScanning(false);
+            scanner?.clear();
+          },
+          (error) => {
+            // Ignore continuous background scanning errors
+          }
+        );
+      }, 100);
     }
+    
     return () => {
-      scanner?.clear().catch(console.error);
+      if (scanner) {
+        scanner.clear().catch(console.error);
+      }
     };
   }, [activeTab, isScanning]);
 
-  const handleTextScan = () => {
-    const entries = Object.entries(mockTextDatabase).map(([key, val]) => ({
-      text: key,
-      response: val,
-    }));
-    const match = entries.find((item) =>
-      textInput.toLowerCase().includes(item.text.toLowerCase()),
-    );
-    setTextResult(
-      match
-        ? match.response
-        : {
-            verdict: "SAFE",
-            threat_score: 5,
-            triggered_keywords: [],
-            nlp_label: "Clean Text",
-            nlp_confidence: 0.98,
-            findings: ["No suspicious links or phishing patterns found."],
-          },
-    );
+  const handleTextScan = async () => {
+    if (!textInput.trim()) {
+      alert("Please paste some text into the box first!");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/analyze-text", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: textInput }),
+      });
+
+      if (!response.ok) throw new Error("Network response was not ok");
+      
+      const data = await response.json();
+      setTextResult(data);
+    } catch (error) {
+      console.error("Backend connection failed:", error);
+      alert("Failed to connect to the backend. Is FastAPI running?");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleQRScan = () => {
-    const entries = Object.entries(mockQRDatabase).map(([key, val]) => ({
-      content: key,
-      response: val,
-    }));
-    const match = entries.find((item) =>
-      qrInput.toLowerCase().includes(item.content.toLowerCase()),
-    );
-    setQrResult(
-      match
-        ? match.response
-        : {
-            verdict: "SAFE",
-            threat_score: 12,
-            content_type: "URL",
-            redirect_chain: [qrInput],
-            typosquat_match: false,
-            tld_risk: false,
-            apk_detected: false,
-            findings: ["The scanned destination URL is clean and verified."],
-          },
-    );
+  const handleQRScan = async () => {
+    console.log("1. Button Clicked! URL:", qrInput);
+
+    if (!qrInput.trim()) {
+      alert("Please paste a URL into the box first!");
+      return;
+    }
+    
+    setIsLoading(true);
+    console.log("2. Sending request to backend...");
+    
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/inspect", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content: qrInput }),
+      });
+
+      console.log("3. Backend responded with status:", response.status);
+
+      if (!response.ok) throw new Error(`Server returned ${response.status}`);
+      
+      const data = await response.json();
+      console.log("4. Data received:", data);
+      
+      setQrResult(data);
+    } catch (error) {
+      console.error("5. Backend connection failed:", error);
+      alert("Failed to connect to the backend! Is FastAPI running?");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -124,18 +150,20 @@ export default function App() {
             />
             <button
               onClick={handleTextScan}
-              className="w-full bg-teal-500 py-3 rounded-xl font-bold"
+              disabled={isLoading}
+              className="w-full bg-teal-500 hover:bg-teal-400 disabled:bg-teal-800 py-3 rounded-xl font-bold transition-colors"
             >
-              Analyze Text Payload
+              {isLoading ? "Analyzing via MiniLM..." : "Analyze Text Payload"}
             </button>
+            
             {textResult && (
-              <div className="mt-4 p-4 bg-slate-800 rounded-xl border border-teal-500/30">
+              <div className={`mt-4 p-4 rounded-xl border ${textResult.verdict === 'SAFE' ? 'bg-slate-800 border-teal-500/30' : 'bg-red-950/30 border-red-500/50'}`}>
                 <div className="flex justify-between font-bold mb-2">
-                  <span>Verdict: {textResult.verdict}</span>
-                  <span>Score: {textResult.threat_score}/100</span>
+                  <span className={textResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Verdict: {textResult.verdict}</span>
+                  <span className={textResult.threat_score >= 60 ? 'text-red-400' : ''}>Score: {textResult.threat_score}/100</span>
                 </div>
                 <p className="text-sm text-slate-400 mb-2">
-                  Confidence: {Math.round(textResult.nlp_confidence * 100)}%
+                  AI Label: {textResult.nlp_label} (Confidence: {Math.round(textResult.nlp_confidence * 100)}%)
                 </p>
                 {textResult.findings.map((f, i) => (
                   <p key={i} className="text-xs text-slate-300">
@@ -148,11 +176,12 @@ export default function App() {
         ) : (
           <div className="space-y-4">
             {isScanning ? (
-              <div id="reader" />
+              // THE FIX: Added white background and min-height so the buttons are visible
+              <div id="reader" className="w-full min-h-[300px] bg-white text-black rounded-xl overflow-hidden p-4" />
             ) : (
               <button
                 onClick={() => setIsScanning(true)}
-                className="w-full py-4 border-2 border-dashed border-slate-700 rounded-xl text-teal-400"
+                className="w-full py-4 border-2 border-dashed border-slate-700 hover:border-teal-500 rounded-xl text-teal-400 transition-colors"
               >
                 📷 Open Camera
               </button>
@@ -165,15 +194,17 @@ export default function App() {
             />
             <button
               onClick={handleQRScan}
-              className="w-full bg-teal-500 py-3 rounded-xl font-bold"
+              disabled={isLoading}
+              className="w-full bg-teal-500 hover:bg-teal-400 disabled:bg-teal-800 py-3 rounded-xl font-bold transition-colors"
             >
-              Inspect QR Target
+              {isLoading ? "Inspecting Target..." : "Inspect QR Target"}
             </button>
+            
             {qrResult && (
-              <div className="mt-4 p-4 bg-slate-800 rounded-xl border border-teal-500/30">
+              <div className={`mt-4 p-4 rounded-xl border ${qrResult.verdict === 'SAFE' ? 'bg-slate-800 border-teal-500/30' : 'bg-red-950/30 border-red-500/50'}`}>
                 <div className="flex justify-between font-bold mb-2">
-                  <span>Verdict: {qrResult.verdict}</span>
-                  <span>Score: {qrResult.threat_score}/100</span>
+                  <span className={qrResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Verdict: {qrResult.verdict}</span>
+                  <span className={qrResult.threat_score >= 50 ? 'text-red-400' : ''}>Score: {qrResult.threat_score}/100</span>
                 </div>
                 <p className="text-sm text-slate-400 mb-2">
                   Type: {qrResult.content_type}
