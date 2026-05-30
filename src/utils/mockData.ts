@@ -1,5 +1,7 @@
-import { TextAnalysisResponse, QRInspectionResponse } from "../types";
-
+import type {
+  TextAnalysisResponse,
+  QRInspectionResponse,
+} from "../types/index";
 export const mockTextDatabase: Record<string, TextAnalysisResponse> = {
   urgent: {
     verdict: "PHISHING",
