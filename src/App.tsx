@@ -51,7 +51,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 selection:bg-teal-500 selection:text-slate-950">
       <header className="max-w-4xl mx-auto mb-10 text-center">
         <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
-          ACTION KAMEN SECURITY ENGINE
+          QR SHIELD
         </h1>
         <p className="text-slate-400 text-sm mt-2 tracking-wide">
           REAL-TIME TEXT ANALYSIS & QR DETECTOR FRONTEND MODULE
