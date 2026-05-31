@@ -1,73 +1,87 @@
-# React + TypeScript + Vite
+📌 What is QR Shield?
+QR Shield is a browser-based security web app that protects users from modern phishing attacks — suspicious messages, malicious URLs, and dangerous QR codes — all without installing anything. Just open the browser and you're protected.
+Phishing has evolved. Beyond emails, attackers now use:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SMS phishing — fake texts impersonating banks or services
+Malicious links — credential-stealing URLs disguised as real websites
+Quishing — QR codes that silently redirect to harmful sites or trigger downloads
 
-Currently, two official plugins are available:
+QR Shield fights all three.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+✨ Features
+1. 📝 Text Analyser
+Paste any SMS, email, or message and get an instant verdict.
 
-## React Compiler
+Detects OTP harvesting — messages trying to steal one-time passwords
+Flags social engineering — urgency tactics and fake authority impersonation
+Catches brand spoofing — fake messages from banks, retailers, or government agencies
+Returns verdict: Safe / Suspicious / Phishing
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. 🔗 URL Detector
+Never click a suspicious link blindly again.
 
-## Expanding the ESLint configuration
+Domain verification — checks if the site is real, fake, or a known scam
+Typosquatting detection — catches domains mimicking real brands (e.g. paypa1.com)
+SSL & WHOIS checks — flags missing certificates and freshly registered domains
+Redirect tracing — follows link chains to reveal the true destination
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. 📷 Secure QR Scanner ⭐ Main Feature
+This is what sets QR Shield apart from every other QR scanner.
+The problem with standard QR scanners:
+The moment you scan, your device immediately connects to the encoded URL — you're already at the malicious site before you even know what you scanned.
+How QR Shield is different:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+You scan the QR code in the app
+QR decoded → URL extracted
+Our server sends the request — your device never connects
+Every redirect hop is followed and inspected
+App-install attempts and malicious payloads are detected
+Verdict returned: Safe / Risky / Block
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+🔒 Your device is never exposed. All scanning happens server-side in an isolated environment.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+🌐 The WebApp Advantage
+FeatureTraditional AppsQR ShieldInstallation required✅ Yes❌ NoStorage used✅ Yes❌ ZeroThreat updatesManual✅ AutomaticWorks on all devicesVaries✅ Mobile, tablet, desktopQR device exposure✅ Exposed❌ Server-side only
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+🚀 Getting Started
+No installation needed. Just visit:
+https://action-kamen-frontend.vercel.app
+Or run locally:
+Prerequisites
+
+Node.js v18+
+Python 3.10+
+
+Installation
+bash# Clone the repository
+git clone https://github.com/CodeYatra/qr-shield.git
+cd qr-shield
+
+# Install frontend dependencies
+cd frontend
+npm install
+npm run dev
+
+# Install backend dependencies
+cd ../backend
+pip install -r requirements.txt
+python app.py
+
+🛠️ Tech Stack
+LayerTechnologyFrontendReact, Tailwind CSS, Camera APIBackendNode.js / Python FastAPIAnalysis EngineNLP Model, URL Crawler, Sandbox RunnerDatabase & CacheMongoDB, RedisDeploymentVercel (frontend)
+
+🎯 Real-World Use Cases
+
+Suspicious bank email? → Paste into Text Analyser to detect OTP harvesting before responding
+Got a link from a hacked account? → Run it through URL Detector before clicking
+Scanning a public QR code (restaurant, parking meter, flyer)? → Use Secure QR Scanner with zero device exposure
+
+
+🆚 QR Shield vs Traditional Tools
+FeatureTraditional ScannersQR ShieldText phishing detectionPartial (keyword only)✅ Full NLP analysisURL reputation checkBasic✅ Live + redirect-awareQR code scanningJust opens URL✅ Full sandbox crawlRedirect chain inspection❌ No✅ All hops scannedDevice protection (QR)❌ Device exposed✅ Server-side onlyApp install detection❌ No✅ YesOTP harvest detection❌ No✅ Yes
+
+👥 Team
+CodeYatra
+Built with ❤️ as part of a hackathon project focused on making everyday digital interactions safer for everyone.
