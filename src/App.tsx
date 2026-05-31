@@ -159,7 +159,7 @@ export default function App() {
             }}
             className={`flex-1 py-2 rounded-lg font-medium ${activeTab === "url" ? "bg-teal-600" : "bg-slate-800"}`}
           >
-            URL AI
+            URL
           </button>
         </div>
 
@@ -267,7 +267,7 @@ export default function App() {
               disabled={isLoading}
               className="w-full bg-teal-500 hover:bg-teal-400 disabled:bg-teal-800 py-3 rounded-xl font-bold transition-colors"
             >
-              {isLoading ? "Running Deep Gemini Audit..." : "Analyze with Gemini AI"}
+              {isLoading ? "Running Deep Audit..." : "Analyze with AI"}
             </button>
           </div>
         )}
@@ -296,7 +296,7 @@ export default function App() {
         {activeTab === "url" && urlResult && (
           <div className={`mt-6 p-4 rounded-xl border ${urlResult.verdict === 'SAFE' ? 'bg-slate-800 border-teal-500/30' : 'bg-red-950/30 border-red-500/50'}`}>
             <div className="flex justify-between font-bold mb-2">
-              <span className={urlResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Gemini Verdict: {urlResult.verdict}</span>
+              <span className={urlResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Final Verdict: {urlResult.verdict}</span>
               <span className={urlResult.threat_score >= 50 ? 'text-red-400' : ''}>Threat Level: {urlResult.threat_score}/100</span>
             </div>
             {urlResult.redirect_chain && urlResult.redirect_chain.length > 0 && (
