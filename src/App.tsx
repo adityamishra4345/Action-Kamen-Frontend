@@ -5,6 +5,9 @@ import type {
   QRInspectionResponse,
 } from "./types/index.ts";
 
+const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const API_BASE_URL = IS_LOCAL ? "http://127.0.0.1:8000" : "https://qr-shield-p5wm.onrender.com";
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<"text" | "qr" | "url">("text");
   const [textInput, setTextInput] = useState("");
@@ -32,9 +35,7 @@ export default function App() {
             setIsScanning(false);
             scanner?.clear();
           },
-          (error) => {
-            // Ignore continuous background scanning errors
-          }
+          () => {}
         );
       }, 100);
     }
@@ -55,7 +56,7 @@ export default function App() {
     setIsLoading(true);
     
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/analyze-text", {
+      const response = await fetch(`${API_BASE_URL}/api/analyze-text`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,18 +77,15 @@ export default function App() {
   };
 
   const handleQRScan = async () => {
-    console.log("1. Button Clicked! URL:", qrInput);
-
     if (!qrInput.trim()) {
       alert("Please paste a URL into the box first!");
       return;
     }
     
     setIsLoading(true);
-    console.log("2. Sending request to backend...");
     
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/inspect", {
+      const response = await fetch(`${API_BASE_URL}/api/inspect`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,27 +93,24 @@ export default function App() {
         body: JSON.stringify({ content: qrInput }),
       });
 
-      console.log("3. Backend responded with status:", response.status);
-
       if (!response.ok) throw new Error(`Server returned ${response.status}`);
       
       const data = await response.json();
-      console.log("4. Data received:", data);
       
       setQrResult(data);
     } catch (error) {
-      console.error("5. Backend connection failed:", error);
+      console.error("Backend connection failed:", error);
       alert("Failed to connect to the backend! Is FastAPI running?");
     } finally {
       setIsLoading(false);
     }
   };
 
-const handleURLScan = async () => {
+  const handleURLScan = async () => {
     if (!urlInput.trim()) return;
     setIsLoading(true);
     try {
-      const r = await fetch("http://127.0.0.1:8000/api/analyze-url", {
+      const r = await fetch(`${API_BASE_URL}/api/analyze-url`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: urlInput }),
@@ -181,7 +176,7 @@ const handleURLScan = async () => {
                 if (!textInput.trim()) return;
                 setIsLoading(true);
                 try {
-                  const r = await fetch("http://127.0.0.1:8000/api/analyze-text", {
+                  const r = await fetch(`${API_BASE_URL}/api/analyze-text`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ text: textInput }),
@@ -225,7 +220,7 @@ const handleURLScan = async () => {
                   onClick={async () => {
                     setIsLoading(true);
                     try {
-                      const r = await fetch("http://127.0.0.1:8000/api/inspect-qr", {
+                      const r = await fetch(`${API_BASE_URL}/api/inspect`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ content: qrInput }),
