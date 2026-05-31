@@ -267,7 +267,7 @@ export default function App() {
               disabled={isLoading}
               className="w-full bg-teal-500 hover:bg-teal-400 disabled:bg-teal-800 py-3 rounded-xl font-bold transition-colors"
             >
-              {isLoading ? "Running Deep Audit..." : "Analyze with AI"}
+              {isLoading ? "Running Deep Audit..." : "Analyze"}
             </button>
           </div>
         )}
@@ -277,7 +277,7 @@ export default function App() {
               <span className={textResult.verdict !== 'SAFE' ? 'text-red-400' : 'text-teal-400'}>Verdict: {textResult.verdict}</span>
               <span className={textResult.threat_score >= 60 ? 'text-red-400' : ''}>Score: {textResult.threat_score}/100</span>
             </div>
-            <p className="text-sm text-slate-400 mb-2">AI Label: {textResult.nlp_label}</p>
+            <p className="text-sm text-slate-400 mb-2">{textResult.nlp_label}</p>
             {textResult.findings.map((f, i) => <p key={i} className="text-xs text-slate-300">• {f}</p>)}
           </div>
         )}
